@@ -11,7 +11,7 @@
 #
 
 # 移除要替换的包
-#rm -rf feeds/packages/net/v2ray-geodata
+rm -rf feeds/packages/net/v2ray-geodata
 #rm -rf feeds/packages/net/mosdns
 #rm -rf feeds/luci/applications/luci-app-mosdns
 
@@ -33,7 +33,7 @@ function git_sparse_clone() {
 #git_sparse_clone master https://github.com/kiddin9/openwrt-packages luci-app-jellyfin luci-lib-taskd luci-lib-xterm taskd
 #git_sparse_clone master https://github.com/kiddin9/openwrt-packages luci-app-linkease linkease ffmpeg-remux
 #git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns
-#git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
+git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata
 
 #git_sparse_clone master https://github.com/kiddin9/openwrt-packages luci-app-passwall2
 
@@ -41,31 +41,18 @@ function git_sparse_clone() {
 #chmod -R a+x $GITHUB_WORKSPACE/preset-clash-core.sh
 #$GITHUB_WORKSPACE/preset-clash-core.sh
 
+# 添加passwall2
+git clone https://github.com/xiaorouji/openwrt-passwall2.git package/luci-app-passwall2
+
 echo "
-# openclash
-#CONFIG_PACKAGE_luci-app-openclash=y
 
-# 阿里DDNS
-#CONFIG_PACKAGE_luci-app-aliddns=y
-
-# filebrowser
-#CONFIG_PACKAGE_luci-app-filebrowser=y
-
-# Jellyfin
-#CONFIG_PACKAGE_luci-app-jellyfin=y
-
-# 易有云
-#CONFIG_PACKAGE_luci-app-linkease=y
-
-#CONFIG_PACKAGE_luci-app-passwall2=y
-
-#CONFIG_PACKAGE_luci-app-argon-config=y
+CONFIG_PACKAGE_luci-app-passwall2=y
 
 " >> .config
 
 # 修改默认IP
 sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
-
+sed -i 's/255.255.255.0/255.255.252.0/g' package/base-files/files/bin/config_generate
 # 修改默认主题
 #sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
 
