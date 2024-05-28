@@ -93,7 +93,7 @@ jobs:
       run: |
         chmod +x %SoftEtherPatch
         cd openwrt
-        $GITHUB_WORKSPACE/$SoftEtherPatch
+        patch -p0 < $GITHUB_WORKSPACE/$SoftEtherPatch
 
     - name: 加载自定义配置
       run: |
