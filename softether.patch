@@ -1,0 +1,267 @@
+diff -urN feeds/packages/net/softethervpn5/Makefile ../immortalwrt/feeds/packages/net/softethervpn5/Makefile
+--- feeds/packages/net/softethervpn5/Makefile	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/Makefile	2024-05-28 06:36:51.051975747 +0000
+@@ -3,15 +3,15 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=softethervpn5
+-PKG_VERSION:=5.01.9674
+-PKG_RELEASE:=1
++PKG_VERSION:=5.02.5180
++PKG_RELEASE:=3
+ 
+ PKG_LICENSE:=GPL-2.0
+ PKG_LICENSE_FILES:=COPYING
+ 
+ PKG_SOURCE_URL:=https://github.com/SoftEtherVPN/SoftEtherVPN/releases/download/$(PKG_VERSION)/
+-PKG_SOURCE:=softether-vpn-src-$(PKG_VERSION).tar.gz
+-PKG_HASH:=c4dc53f4912605a25c18357b0a0bf6dc059286ca901cb981abdf1a22d1649ddc
++PKG_SOURCE:=SoftEtherVPN-$(PKG_VERSION).tar.xz
++PKG_HASH:=b5649a8ea3cc6477325e09e2248ef708d434ee3b2251eb8764bcfc15fb1de456
+ 
+ HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/SoftEtherVPN-$(PKG_VERSION)
+ PKG_BUILD_DIR:=$(BUILD_DIR)/SoftEtherVPN-$(PKG_VERSION)
+@@ -41,7 +41,7 @@
+ 
+ define Package/softethervpn5-libs
+   $(call Package/softethervpn5/Default)
+-  DEPENDS:=+libpthread +librt +libreadline +libopenssl +libncurses +kmod-tun +zlib $(ICONV_DEPENDS)
++  DEPENDS:=+libsodium +libpthread +librt +libreadline +libopenssl +libncurses +kmod-tun +zlib $(ICONV_DEPENDS)
+   TITLE+= libs
+   HIDDEN:=1
+ endef
+@@ -91,6 +91,7 @@
+ 	$(SED) 's,SHARED,STATIC,g' $(HOST_BUILD_DIR)/src/Mayaqua/CMakeLists.txt
+ 	$(SED) 's,SHARED,STATIC,g' $(HOST_BUILD_DIR)/src/Cedar/CMakeLists.txt
+ 	$(SED) 's,readline,libreadline.a,g' $(HOST_BUILD_DIR)/src/Cedar/CMakeLists.txt
++	$(SED) 's,libsodium REQUIRED,libsodium,g' $(HOST_BUILD_DIR)/src/Cedar/CMakeLists.txt
+ endef
+ 
+ define Host/Compile
+@@ -99,23 +100,29 @@
+ 
+ define Host/Install
+ 	$(INSTALL_DIR) $(STAGING_DIR_HOSTPKG)/bin/
+-	$(INSTALL_BIN) $(HOST_BUILD_DIR)/tmp/hamcorebuilder $(STAGING_DIR_HOSTPKG)/bin/
++	$(INSTALL_BIN) $(HOST_BUILD_DIR)/src/hamcorebuilder/hamcorebuilder $(STAGING_DIR_HOSTPKG)/bin/
+ endef
+ 
+-define Build/Compile
+-	$(call Build/Compile/Default,vpnserver vpnbridge vpnclient vpncmd hamcore-archive-build)
++# disable SSE detection, disables BLAKE2 lib
++define Build/Prepare
++	$(call Build/Prepare/Default)
++	$(SED) 's,cmake_host_system_information,#cmake_host_system_information,g' $(PKG_BUILD_DIR)/src/Cedar/CMakeLists.txt
+ endef
+ 
+-define Build/Install
++define Build/Compile
++	$(call Build/Compile/Default,vpnserver vpnbridge vpnclient vpncmd hamcore-archive-build)
+ endef
+ 
+ define Package/softethervpn5-libs/install
+ 	$(INSTALL_DIR) $(1)/usr/lib
+-	$(CP) $(PKG_BUILD_DIR)/build/libcedar.so $(1)/usr/lib/
+-	$(CP) $(PKG_BUILD_DIR)/build/libmayaqua.so $(1)/usr/lib/
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libcedar.so $(1)/usr/lib/
++	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libmayaqua.so $(1)/usr/lib/
+ 	$(INSTALL_DIR) $(1)/usr/libexec/softethervpn
+-	$(CP) $(PKG_BUILD_DIR)/build/hamcore.se2 $(1)/usr/libexec/softethervpn/
+-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/vpncmd $(1)/usr/libexec/softethervpn/
++	$(CP) $(PKG_INSTALL_DIR)/usr/libexec/softether/vpncmd/hamcore.se2 $(1)/usr/libexec/softethervpn/
++	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/softether/vpncmd/vpncmd $(1)/usr/libexec/softethervpn/
++	$(INSTALL_DIR) $(1)/usr/bin
++	if [ -f $(PKG_INSTALL_DIR)/usr/bin/list_cpu_features ]; then \
++		$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/list_cpu_features $(1)/usr/bin/ ; fi 
+ 	$(INSTALL_BIN) files/launcher.sh $(1)/usr/libexec/softethervpn/
+ 	$(INSTALL_DATA) files/dummy $(1)/usr/libexec/softethervpn/lang.config
+ 	$(INSTALL_DIR) $(1)/usr/bin
+@@ -124,7 +131,7 @@
+ 
+ define Package/softethervpn5-server/install
+ 	$(INSTALL_DIR) $(1)/usr/libexec/softethervpn
+-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/vpnserver $(1)/usr/libexec/softethervpn/
++	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/softether/vpnserver/vpnserver $(1)/usr/libexec/softethervpn/
+ 	$(INSTALL_DATA) files/dummy $(1)/usr/libexec/softethervpn/vpn_server.config
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+ 	$(INSTALL_BIN) files/vpnserver.init $(1)/etc/init.d/softethervpnserver
+@@ -132,7 +139,7 @@
+ 
+ define Package/softethervpn5-bridge/install
+ 	$(INSTALL_DIR) $(1)/usr/libexec/softethervpn
+-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/vpnbridge $(1)/usr/libexec/softethervpn/
++	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/softether/vpnbridge/vpnbridge $(1)/usr/libexec/softethervpn/
+ 	$(INSTALL_DATA) files/dummy $(1)/usr/libexec/softethervpn/vpn_bridge.config
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+ 	$(INSTALL_BIN) files/vpnbridge.init $(1)/etc/init.d/softethervpnbridge
+@@ -140,7 +147,7 @@
+ 
+ define Package/softethervpn5-client/install
+ 	$(INSTALL_DIR) $(1)/usr/libexec/softethervpn
+-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/build/vpnclient $(1)/usr/libexec/softethervpn/
++	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/softether/vpnclient/vpnclient $(1)/usr/libexec/softethervpn/
+ 	$(INSTALL_DATA) files/dummy $(1)/usr/libexec/softethervpn/vpn_client.config
+ 	$(INSTALL_DIR) $(1)/etc/init.d
+ 	$(INSTALL_BIN) files/vpnclient.init $(1)/etc/init.d/softethervpnclient
+diff -urN feeds/packages/net/softethervpn5/patches/001-iconv-cmake-fix.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/001-iconv-cmake-fix.patch
+--- feeds/packages/net/softethervpn5/patches/001-iconv-cmake-fix.patch	1970-01-01 00:00:00.000000000 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/001-iconv-cmake-fix.patch	2024-05-28 06:36:51.051975747 +0000
+@@ -0,0 +1,11 @@
++--- a/src/Mayaqua/CMakeLists.txt
+++++ b/src/Mayaqua/CMakeLists.txt
++@@ -55,7 +55,7 @@ if(UNIX)
++   find_package(Threads REQUIRED)
++ 
++   # In some cases libiconv is not included in libc
++-  find_library(LIB_ICONV iconv)
+++  find_library(LIB_ICONV iconv HINTS "${ICONV_LIB_PATH}")
++ 
++   find_library(LIB_RT rt)
++ 
+diff -urN feeds/packages/net/softethervpn5/patches/001-iconv-defines-fix.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/001-iconv-defines-fix.patch
+--- feeds/packages/net/softethervpn5/patches/001-iconv-defines-fix.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/001-iconv-defines-fix.patch	1970-01-01 00:00:00.000000000 +0000
+@@ -1,11 +0,0 @@
+---- a/src/Mayaqua/Mayaqua.h
+-+++ b/src/Mayaqua/Mayaqua.h
+-@@ -184,7 +184,7 @@ int PASCAL WinMain(HINSTANCE hInst, HINS
+- #include <ifaddrs.h>
+- #endif	// MAYAQUA_SUPPORTS_GETIFADDRS
+- 
+--#ifdef	UNIX_LINUX
+-+#if 0
+- typedef void *iconv_t;
+- iconv_t iconv_open (__const char *__tocode, __const char *__fromcode);
+- size_t iconv (iconv_t __cd, char **__restrict __inbuf,
+diff -urN feeds/packages/net/softethervpn5/patches/002-iconv-cmake-fix.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/002-iconv-cmake-fix.patch
+--- feeds/packages/net/softethervpn5/patches/002-iconv-cmake-fix.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/002-iconv-cmake-fix.patch	1970-01-01 00:00:00.000000000 +0000
+@@ -1,11 +0,0 @@
+---- a/src/Mayaqua/CMakeLists.txt
+-+++ b/src/Mayaqua/CMakeLists.txt
+-@@ -59,7 +59,7 @@ if(UNIX)
+-   find_package(ZLIB REQUIRED)
+- 
+-   # In some cases libiconv is not included in libc
+--  find_library(LIB_ICONV iconv)
+-+  find_library(LIB_ICONV iconv HINTS "${ICONV_LIB_PATH}")
+- 
+-   find_library(LIB_RT rt)
+- 
+diff -urN feeds/packages/net/softethervpn5/patches/002-pthread-include-fix.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/002-pthread-include-fix.patch
+--- feeds/packages/net/softethervpn5/patches/002-pthread-include-fix.patch	1970-01-01 00:00:00.000000000 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/002-pthread-include-fix.patch	2024-05-28 06:36:51.051975747 +0000
+@@ -0,0 +1,13 @@
++--- a/src/Mayaqua/Encrypt.h
+++++ b/src/Mayaqua/Encrypt.h
++@@ -9,7 +9,9 @@
++ #define	ENCRYPT_H
++ 
++ #include "MayaType.h"
++-
+++#ifdef linux
+++	#include <pthread.h>
+++#endif
++ #include <openssl/opensslv.h>
++ 
++ // Constant
+diff -urN feeds/packages/net/softethervpn5/patches/010-engines.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/010-engines.patch
+--- feeds/packages/net/softethervpn5/patches/010-engines.patch	1970-01-01 00:00:00.000000000 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/010-engines.patch	2024-05-28 06:36:51.051975747 +0000
+@@ -0,0 +1,30 @@
++From ee3bf7f5079bcad51cc89197b6a9e34da746fc7e Mon Sep 17 00:00:00 2001
++From: Rosen Penev <rosenp@gmail.com>
++Date: Sat, 7 Aug 2021 20:05:04 -0700
++Subject: [PATCH] fix compilation without OpenSSL engines
++
++Signed-off-by: Rosen Penev <rosenp@gmail.com>
++---
++ src/Mayaqua/Encrypt.c | 4 ++++
++ 1 file changed, 4 insertions(+)
++
++--- a/src/Mayaqua/Encrypt.c
+++++ b/src/Mayaqua/Encrypt.c
++@@ -3128,6 +3128,7 @@ bool IsEncryptedK(BUF *b, bool private_k
++ 
++ K *OpensslEngineToK(char *key_file_name, char *engine_name)
++ {
+++#ifndef OPENSSL_NO_ENGINE
++     K *k;
++ #if OPENSSL_API_COMPAT < 0x10100000L
++     ENGINE_load_dynamic();
++@@ -3140,6 +3141,9 @@ K *OpensslEngineToK(char *key_file_name,
++     k->pkey = pkey;
++     k->private_key = true;
++     return k;
+++#else
+++    return NULL;
+++#endif
++ }
++ 
++ // Convert the BUF to a K
+diff -urN feeds/packages/net/softethervpn5/patches/100-increase-cfg-save-intervall.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/100-increase-cfg-save-intervall.patch
+--- feeds/packages/net/softethervpn5/patches/100-increase-cfg-save-intervall.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/100-increase-cfg-save-intervall.patch	2024-05-28 06:36:51.051975747 +0000
+@@ -1,6 +1,6 @@
+ --- a/src/Cedar/Server.h
+ +++ b/src/Cedar/Server.h
+-@@ -32,10 +32,10 @@ extern char *SERVER_CONFIG_FILE_NAME;
++@@ -35,10 +35,10 @@ extern char *SERVER_CONFIG_FILE_NAME;
+  #define	SERVER_CONTROL_TCP_TIMEOUT		(60 * 1000)
+  #define	SERVER_FARM_CONTROL_INTERVAL	(10 * 1000)
+  
+diff -urN feeds/packages/net/softethervpn5/patches/101-add-config-write-syslog.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/101-add-config-write-syslog.patch
+--- feeds/packages/net/softethervpn5/patches/101-add-config-write-syslog.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/101-add-config-write-syslog.patch	2024-05-28 06:36:51.051975747 +0000
+@@ -1,15 +1,14 @@
+ --- a/src/Cedar/Server.c
+ +++ b/src/Cedar/Server.c
+-@@ -4,7 +4,7 @@
+- 
++@@ -5,6 +5,7 @@
+  // Server.c
+  // VPN Server module
+--
++ 
+ +#include <syslog.h>
+- #include "CedarPch.h"
++ #include "Server.h"
+  
+- static SERVER *server = NULL;
+-@@ -6492,6 +6492,10 @@ UINT SiWriteConfigurationFile(SERVER *s)
++ #include "Admin.h"
++@@ -6561,6 +6562,10 @@ UINT SiWriteConfigurationFile(SERVER *s)
+  	{
+  		return 0;
+  	}
+diff -urN feeds/packages/net/softethervpn5/patches/150_remove-restriction.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/150_remove-restriction.patch
+--- feeds/packages/net/softethervpn5/patches/150_remove-restriction.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/150_remove-restriction.patch	1970-01-01 00:00:00.000000000 +0000
+@@ -1,10 +0,0 @@
+---- a/src/Cedar/Server.c	2020-04-30 16:48:22.000000000 +0800
+-+++ b/src/Cedar/Server.c	2022-08-12 15:08:36.000000000 +0800
+-@@ -10624,6 +10624,7 @@
+- // 
+- bool SiIsEnterpriseFunctionsRestrictedOnOpenSource(CEDAR *c)
+- {
+-+	return false;
+- 	char region[128];
+- 	bool ret = false;
+- 	// Validate arguments
+diff -urN feeds/packages/net/softethervpn5/patches/151-fix-openvpn-static-route-push.patch ../immortalwrt/feeds/packages/net/softethervpn5/patches/151-fix-openvpn-static-route-push.patch
+--- feeds/packages/net/softethervpn5/patches/151-fix-openvpn-static-route-push.patch	2024-05-28 07:28:06.740110882 +0000
++++ ../immortalwrt/feeds/packages/net/softethervpn5/patches/151-fix-openvpn-static-route-push.patch	1970-01-01 00:00:00.000000000 +0000
+@@ -1,13 +0,0 @@
+---- a/src/Cedar/Proto_OpenVPN.c	2020-04-30 16:48:22.000000000 +0800
+-+++ b/src/Cedar/Proto_OpenVPN.c	2022-08-12 15:12:00.000000000 +0800
+-@@ -2436,8 +2436,8 @@
+- 											if (r->Exists)
+- 											{
+- 												Format(l3_options, sizeof(l3_options),
+--													",route %r %r vpn_gateway",
+--													&r->Network, &r->SubnetMask);
+-+													",route %r %r %r",
+-+													&r->Network, &r->SubnetMask, &r->Gateway);
+- 
+- 												StrCat(option_str, sizeof(option_str), l3_options);
+- 											}
