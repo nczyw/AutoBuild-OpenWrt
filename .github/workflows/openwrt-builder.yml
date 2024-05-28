@@ -171,7 +171,7 @@ jobs:
 
         ⏱️ 编译时间: $(date +"%Y年%m月%d日%H时%M分")
 
-        🌐 管理地址: 192.168.0.2
+        🌐 管理地址: 10.0.0.1 , 子网掩码: 255.255.252.0
 
         👤 用户名: root
 
@@ -199,5 +199,5 @@ jobs:
       uses: dev-drprasad/delete-older-releases@master
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-        keep_latest: 4
+        keep_latest: 1
         delete_tags: true
