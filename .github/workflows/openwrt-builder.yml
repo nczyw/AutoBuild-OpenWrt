@@ -91,9 +91,10 @@ jobs:
 
     - name: softetherVPN与OpenWrt同步
       run: |
-        chmod +x $SoftEtherPatch
+#        chmod +x $SoftEtherPatch
         cd openwrt
-        patch -p0 < $GITHUB_WORKSPACE/$SoftEtherPatch
+        cat feeds/packages/net/softethervpn5/Makefile
+#        patch -p0 < $GITHUB_WORKSPACE/$SoftEtherPatch
 
     - name: 加载自定义配置
       run: |
