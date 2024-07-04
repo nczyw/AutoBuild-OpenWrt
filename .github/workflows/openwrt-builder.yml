@@ -91,6 +91,7 @@ jobs:
 
     - name: softetherVPN与OpenWrt同步
       run: |
+        cd openwrt
         cat feeds/packages/net/softethervpn5/Makefile
 #        chmod +x $SoftEtherPatch
 #        cd openwrt
