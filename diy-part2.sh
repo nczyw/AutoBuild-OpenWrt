@@ -16,6 +16,8 @@ function git_sparse_clone() {
 }
 # 添加passwall2
 git clone https://github.com/xiaorouji/openwrt-passwall2.git package/luci-app-passwall2
+# 添加应用过滤
+git clone  https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 # 添加万能推送
 git_sparse_clone master https://github.com/kiddin9/openwrt-packages luci-app-pushbot
 
@@ -26,6 +28,8 @@ CONFIG_PACKAGE_luci-app-passwall2=y
 CONFIG_PACKAGE_luci-app-pushbot=y
 
 CONFIG_PACKAGE_luci-app-ssr-plus=n
+
+CONFIG_PACKAGE_luci-app-oaf=y
 " >> .config 
 
 # 修改默认IP
