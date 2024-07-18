@@ -30,5 +30,7 @@ CONFIG_PACKAGE_luci-app-ssr-plus=n
 
 # 修改默认IP
 sed -i 's/192.168.1.1/10.0.0.1/g' package/base-files/files/bin/config_generate
+# 修改内核版本
+sed -i 'KERNEL_PATCHVER:=6.1/KERNEL_PATCHVER:=6.6/g' target/linux/x86/Makefile
 # 修改默认网关
 sed -i 's/255.255.255.0/255.255.252.0/g' package/base-files/files/bin/config_generate
