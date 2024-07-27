@@ -21,6 +21,9 @@ git clone  https://github.com/destan19/OpenAppFilter.git package/OpenAppFilter
 # 添加万能推送
 git_sparse_clone master https://github.com/kiddin9/openwrt-packages luci-app-pushbot
 
+# 添加测速插件
+git clone https://github.com/sirpdboy/netspeedtest.git package/netspeedtest
+
 echo "
 
 CONFIG_PACKAGE_luci-app-passwall2=y
@@ -30,6 +33,10 @@ CONFIG_PACKAGE_luci-app-pushbot=y
 CONFIG_PACKAGE_luci-app-ssr-plus=n
 
 CONFIG_PACKAGE_luci-app-oaf=y
+
+# 测速插件
+#CONFIG_PACKAGE_luci-app-netspeedtest=y
+
 " >> .config 
 
 # 修改默认IP
