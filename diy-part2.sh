@@ -30,7 +30,7 @@ CONFIG_PACKAGE_luci-app-passwall2=y
 
 CONFIG_PACKAGE_luci-app-pushbot=y
 
-CONFIG_PACKAGE_luci-app-ssr-plus=n
+#CONFIG_PACKAGE_luci-app-ssr-plus=n
 
 CONFIG_PACKAGE_luci-app-oaf=y
 
