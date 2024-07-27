@@ -35,7 +35,7 @@ CONFIG_PACKAGE_luci-app-ssr-plus=n
 CONFIG_PACKAGE_luci-app-oaf=y
 
 # 测速插件
-#CONFIG_PACKAGE_luci-app-netspeedtest=y
+CONFIG_PACKAGE_luci-app-netspeedtest=y
 
 " >> .config 
 
